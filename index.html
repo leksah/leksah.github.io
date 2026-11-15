@@ -1,88 +1,452 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
+<!doctype html>
+<!-- leksah.github.io homepage.  Authored in the leksah repo at docs/website/
+     (the site root) and mirrored to the leksah/leksah.github.io repo for
+     GitHub Pages.  Self-contained: inline CSS/JS, assets by root-absolute
+     path (/pics, /media) matching the deployed layout; the live demo at
+     /try/ auto-embeds when its frame scrolls into view (a screencast is the
+     instant placeholder until then — leksah.js is large, though GitHub
+     Pages serves it compressed), with a full-screen button in the frame's
+     chrome bar. -->
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="keywords" content="leksah ide haskell ghc gtk gtk2hs integrated development environment emacs vi yi 
-editor windows linux mac functional programming best"  />
-<meta name="verify-v1" content="+au3VoKffoHrcNh149nQ1XCSpZHSz57AknaLRBhjO4M=" />
-<title>Leksah - Haskell IDE in Haskell</title>
-<link rel="icon" href="/images/leksah.png" type="image/x-icon" />
-<link rel="stylesheet" href="leksah.css" type="text/css" />
+  <meta charset="utf-8">
+  <title>Leksah — an IDE written in Haskell</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="Leksah is a fast, hackable IDE written in Haskell: one functional-reactive codebase that runs natively on macOS, Linux and Windows, in your browser, and even compiled to JavaScript.">
+  <!-- The site's own copy: /pics is the APP's icon set, staged from the repo's
+       pics/, and the logo is not one of them (it lives with the classic
+       fork's assets).  media/ is the site's, so keep it there. -->
+  <link rel="icon" href="/media/leksah.png">
+  <style>
+    :root {
+      --bg: #0d1117; --panel: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #9198a1; --accent: #a371f7;
+      --accent2: #58a6ff; --green: #3fb950;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
 
-</head> 
+    header.site {
+      display: flex; align-items: center; gap: 12px;
+      padding: 18px 0; border-bottom: 1px solid var(--border);
+    }
+    header.site img { width: 32px; height: 32px; }
+    header.site .name { font-weight: 700; font-size: 18px; }
+    header.site nav { margin-left: auto; display: flex; gap: 20px; flex-wrap: wrap; }
+    header.site nav a { color: var(--muted); }
+    header.site nav a:hover { color: var(--text); text-decoration: none; }
+
+    .hero { text-align: center; padding: 72px 0 40px; }
+    .hero h1 {
+      font-size: clamp(34px, 6vw, 56px); line-height: 1.15;
+      letter-spacing: -0.02em; font-weight: 800;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero p.sub {
+      margin: 18px auto 0; max-width: 640px; color: var(--muted); font-size: 19px;
+    }
+    .cta { margin-top: 32px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 12px 22px; border-radius: 8px;
+      font-weight: 600; border: 1px solid var(--border);
+    }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { filter: brightness(1.1); text-decoration: none; }
+    .btn.ghost { color: var(--text); background: var(--panel); }
+    .btn.ghost:hover { border-color: var(--muted); text-decoration: none; }
+
+    .demo { margin: 40px 0 24px; }
+    .demo .frame {
+      position: relative; border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: #000;
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+    .demo video { display: block; width: 100%; }
+    /* A slim chrome bar above the demo, so the DEMO badge and the
+       full-screen button never cover the IDE's own menu bar. */
+    .demo .demobar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+      background: var(--panel); font-size: 13px; color: var(--muted);
+    }
+    .demo .demobar .badge {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--bg); background: var(--accent); border-radius: 4px;
+      padding: 2px 8px;
+    }
+    .demo .demobar .fsbtn {
+      margin-left: auto; cursor: pointer; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--bg); color: var(--text);
+      padding: 4px 12px; font: inherit; font-size: 13px; white-space: nowrap;
+    }
+    .demo .demobar .fsbtn:hover { border-color: var(--muted); }
+    .demo iframe { display: block; width: 100%; height: min(78vh, 760px); border: 0; background: var(--bg); }
+    .demo .frame:fullscreen { display: flex; flex-direction: column; }
+    .demo .frame:fullscreen iframe,
+    .demo .frame:fullscreen video { flex: 1; height: auto; min-height: 0; object-fit: contain; }
+    .demo .frame:-webkit-full-screen { display: flex; flex-direction: column; }
+    .demo .frame:-webkit-full-screen iframe,
+    .demo .frame:-webkit-full-screen video { flex: 1; height: auto; min-height: 0; }
+    .demo .below { text-align: center; margin-top: 12px; color: var(--muted); font-size: 14px; }
+
+    section { padding: 56px 0 8px; }
+    section h2 { font-size: 28px; letter-spacing: -0.01em; margin-bottom: 8px; }
+    section p.lead { color: var(--muted); max-width: 720px; margin-bottom: 28px; }
+
+    /* The download button (#install): the primary link is swapped to the
+       visitor's OS by the script at the bottom; the alternates line lists
+       the other platforms. */
+    .dl { margin: 6px 0 26px; }
+    .dl-alts { color: var(--muted); font-size: 14px; margin-top: 12px; }
+    .dl-alts a { color: var(--muted); text-decoration: underline; }
+    .dl-alts a:hover { color: var(--text); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px;
+    }
+    .card h3 { font-size: 16px; margin-bottom: 6px; }
+    .card p { color: var(--muted); font-size: 14.5px; }
+    .card .tag {
+      font-size: 11px; font-weight: 600; color: var(--bg);
+      background: var(--muted); border-radius: 4px; padding: 1px 6px;
+      vertical-align: 2px; margin-left: 6px;
+    }
+
+    .platforms { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .platforms span {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+      padding: 6px 14px; font-size: 14px; color: var(--muted);
+    }
+    .platforms b { color: var(--text); font-weight: 600; }
+
+    pre.install {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 18px 20px; overflow-x: auto; line-height: 1.7;
+    }
+    pre.install .c { color: var(--muted); }
+    pre.install .p { color: var(--green); user-select: none; }
+
+    .haskell {
+      background: linear-gradient(180deg, rgba(163,113,247,.07), transparent);
+      border: 1px solid var(--border); border-radius: 12px; padding: 28px;
+    }
+    .haskell p { color: var(--muted); max-width: 780px; }
+    .haskell p + p { margin-top: 12px; }
+    .haskell b { color: var(--text); }
+
+    footer {
+      margin-top: 72px; border-top: 1px solid var(--border);
+      padding: 28px 0 40px; color: var(--muted); font-size: 14px;
+      display: flex; gap: 18px; flex-wrap: wrap;
+    }
+    footer .spacer { flex: 1; }
+  </style>
+</head>
 <body>
-<br/>
 
-<div id="header">
+<div class="wrap">
+  <header class="site">
+    <img src="/media/leksah.png" alt="">
+    <span class="name">Leksah</span>
+    <nav>
+      <a href="/try/">Demo</a>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#haskell">Haskell</a>
+      <a href="https://github.com/leksah/leksah/tree/master/docs">Docs</a>
+      <a href="https://github.com/leksah/leksah">GitHub</a>
+    </nav>
+  </header>
 
-<ul>
-    <li><a href="https://github.com/leksah/leksah">code</a></li>
-    <li><a href="https://github.com/leksah/leksah/wiki">wiki</a></li>
-    <li><a href="https://github.com/leksah/leksah/issues">issues</a></li>
-    <li><a href="https://github.com/leksah/leksah/wiki/download">download</a></li>
-    <li><a href="http://groups.google.com/group/leksah/topics">forum</a></li>
-    <li><a href="about.html">about</a></li>
-    <li><a href="screenshots.html">screenshots</a></li>
-    <li><a href="index.html">home </a></li>
-</ul>
-<div class="visual"></div>
+  <div class="hero">
+    <h1>An IDE <em>written in Haskell</em></h1>
+    <p class="sub">
+      One functional-reactive codebase that runs as a native app on macOS,
+      Linux and Windows.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="#install">⬇&nbsp; Download</a>
+      <a class="btn ghost" href="https://github.com/leksah/leksah">View on GitHub</a>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="frame" id="demoFrame">
+      <div class="demobar">
+        <span class="badge">DEMO</span>
+        <span>The real IDE compiled to JavaScript — a canned sample, not a full IDE in your browser</span>
+        <button class="fsbtn" id="demoFullscreen" type="button" title="Full screen">⛶ Full screen</button>
+      </div>
+      <iframe src="/try/" title="Leksah running in your browser" loading="lazy"></iframe>
+    </div>
+    <div class="below">
+      This is a <b>canned demo</b>: Leksah itself, built with GHC's JavaScript
+      backend, pre-loaded with a small game project, recorded terminal sessions
+      and precomputed tooltips — nothing compiles or runs natively in this page.
+      Prefer a full window? <a href="/try/">Open it full-page&nbsp;↗</a>
+    </div>
+  </div>
+
+  <section id="features">
+    <h2>Batteries included</h2>
+    <p class="lead">
+      Leksah is deepest at Haskell — and its editor, terminals, git and
+      language-server support work the same for any language.
+    </p>
+    <div class="grid">
+      <div class="card">
+        <h3>Your choice of editor</h3>
+        <p>CodeMirror&nbsp;6 by default, or Monaco — the editor from VS&nbsp;Code —
+           via a preference. Shared find bar, dirty-change gutter, in-editor diffs.</p>
+      </div>
+      <div class="card">
+        <h3>Language servers, zero config</h3>
+        <p>Deep <code>haskell-language-server</code> integration, and automatic use of
+           <code>typescript-language-server</code>, <code>rust-analyzer</code>,
+           <code>gopls</code>, <code>pyright</code>, <code>clangd</code> and
+           <code>nixd</code> when they're on your PATH: diagnostics, hover,
+           completion, go-to-definition, references.</p>
+      </div>
+      <div class="card">
+        <h3>Real terminals</h3>
+        <p>Terminal panes are tmux sessions — persistent, searchable, and still
+           running after a restart. File references in output are clickable;
+           ⌘T opens one where you are working, ⌘D splits beside it.</p>
+      </div>
+      <div class="card">
+        <h3>Git built in</h3>
+        <p>A live changes pane and a history browser with side-by-side diffs
+           for any commit.</p>
+      </div>
+      <div class="card">
+        <h3>Haskell projects, understood</h3>
+        <p>Cabal workspaces, packages and components; incremental and background
+           builds; errors as squiggles and a structured Errors pane; GHCi debugging;
+           cached Nix dev-shell environments.</p>
+      </div>
+      <div class="card">
+        <h3>Follows your focus</h3>
+        <p>The active project is whichever one the pane in front of you is in —
+           an editor, a git log, or a terminal you just <code>cd</code>-ed. Wander
+           into a project you haven't added and it joins the workspace for as
+           long as you're there; pin it to keep it.</p>
+      </div>
+      <div class="card">
+        <h3>Terminals on other machines <span class="tag">experimental</span></h3>
+        <p>Add a server and its tmux sessions open as ordinary Leksah windows —
+           split, drag and flip them like local ones, or nest a remote pane
+           inside a local window. Servers can open at startup and be woken with
+           Wake-on-LAN, and a host without tmux gets nixpkgs' tmux if it has Nix.</p>
+      </div>
+      <div class="card">
+        <h3>Remote projects <span class="tag">experimental</span></h3>
+        <p>Open a project over SSH: editing, builds and the language server run
+           on the remote machine while the UI stays local.</p>
+      </div>
+      <div class="card">
+        <h3>AI assistant <span class="tag">experimental</span></h3>
+        <p>Run your AI tool in a terminal pane and send it the current selection,
+           a <code>file#L10-20</code> reference, the current error, or a screenshot
+           region — straight from the menu.</p>
+      </div>
+      <div class="card">
+        <h3>A team of agents <span class="tag">experimental</span></h3>
+        <p>Claude Code sessions get names and faces, start each other in panes
+           beside you, and report back. The Agents pane shows what each one is
+           doing right now — the tool it is running, what it edited, its branch
+           and PR — the Team pane their bios, and a manager agent coordinates
+           the rest. Suspend one and resume it later, right where it was; after
+           a reboot, the agents it interrupted are offered back — all at once, or
+           let the manager choose. Each agent's worktrees show under it in the
+           workspace, as projects you can open.</p>
+      </div>
+      <div class="card">
+        <h3>Multiple windows</h3>
+        <p>Open extra OS windows onto the same session — each starts with a
+           terminal and your panel layout — and a tab flipper switches between
+           recent tabs across all of them.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>One codebase, every platform</h2>
+    <p class="lead">
+      The whole UI is a single <a href="https://reflex-frp.org/">reflex</a>
+      program. Each platform just gives it a different home:
+    </p>
+    <div class="platforms">
+      <span><b>macOS</b> — native WKWebView app</span>
+      <span><b>Linux</b> — GTK4 + WebKitGTK app</span>
+      <span><b>Windows</b> — Edge WebView2 app</span>
+      <span><b>Any browser</b> — served over HTTP</span>
+      <span><b>No install at all</b> — compiled to JavaScript (<a href="/try/">the demo</a>)</span>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Get it</h2>
+    <!-- The artifacts are GitHub release assets (scripts/release.sh uploads
+         them): too big for the Pages repo this site is mirrored to.  The
+         script at the bottom points the primary button at the visitor's OS.
+         Without JS the button is the Linux tarball and the alternates line
+         lists everything else. -->
+    <div class="dl">
+      <a class="btn primary" id="dlBtn" href="https://github.com/leksah/leksah/releases/download/v2.0.0.0/leksah-2.0.0.0-x86_64-linux.tar.gz">⬇&nbsp; Download for Linux (x86_64)</a>
+      <p class="dl-alts">Nothing to configure — unpack and run.  Other platforms:
+        <span id="dlAlts"><a href="https://github.com/leksah/leksah/releases/download/v2.0.0.0/Leksah-2.0.0.0.dmg">macOS</a> ·
+          <a href="https://github.com/leksah/leksah/releases/download/v2.0.0.0/LeksahSetup.exe">Windows</a> ·
+          <a href="https://github.com/leksah/leksah/releases/download/v2.0.0.0/leksah-warp-2.0.0.0-x86_64-linux-musl.tar.gz">Linux server (static, browser UI)</a></span>
+      </p>
+    </div>
+    <p class="lead">Or build it from source, with <code>ghc</code>, <code>cabal</code> and
+      <code>tmux</code> on your PATH (or inside <code>nix develop</code>, which
+      provides them):</p>
+    <pre class="install"><code><span class="p">$</span> git clone https://github.com/leksah/leksah.git
+<span class="p">$</span> cd leksah
+<span class="p">$</span> ./leksah.sh   <span class="c"># native app (or --warp for the browser UI)</span></code></pre>
+    <p class="lead" style="margin-top:16px">
+      See <a href="https://github.com/leksah/leksah/blob/master/docs/getting-started.md">getting started</a>
+      and <a href="https://github.com/leksah/leksah/blob/master/docs/building.md">building from source</a>
+      for details, front-end variants and packaging outputs.
+    </p>
+  </section>
+
+  <section id="haskell">
+    <h2>Written in Haskell, since 2007</h2>
+    <div class="haskell">
+      <p>
+        Leksah started as a traditional IDE written in Haskell, for Haskell.
+        Its user interface was built with GTK — and that classic Gtk UI is
+        still available, as
+        <a href="https://github.com/leksah/leksah/tree/master/leksah-classic"><code>leksah-classic</code></a>.
+      </p>
+      <p>
+        Turning Leksah into a web app was a long-term goal.  In 2019 work was
+        still underway on a web-based user interface built with
+        <a href="https://reflex-frp.org/">reflex</a> when work on Leksah
+        slowed.  It has since
+        been picked up again and carried forward with the help of AI.  The result is
+        one Haskell codebase that renders through a native
+        WebView via <a href="https://github.com/ghcjs/jsaddle">jsaddle</a>,
+        over a websocket to your browser, or compiled to JavaScript outright —
+        the <a href="/try/">demo above</a> is the IDE itself, built with GHC's
+        JS backend.
+      </p>
+      <p>
+        Being built alongside AI agents has shaped what Leksah does.  Many of
+        its newest features exist to make developing with AI easier: Claude
+        Code sessions get names and faces and live in ordinary panes; they can
+        start one another beside you and report back; the Agents pane shows
+        what each is doing right now — its tool, its edits, its branch, PR and
+        worktrees — and a manager agent can coordinate the rest.  Agents a
+        restart interrupted are offered back, and the selection, the current
+        error or a screenshot region is one menu item away from the AI pane.
+      </p>
+      <p>
+        It is also self-hosting in the most literal sense: Leksah is developed
+        in Leksah.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2007–2026 the Leksah team · <a href="https://github.com/leksah/leksah/blob/master/LICENSE">Apache-2.0</a>
+      (the classic Gtk UI, <a href="https://github.com/leksah/leksah/tree/master/leksah-classic"><code>leksah-classic</code></a>,
+      is still <a href="https://github.com/leksah/leksah/blob/master/leksah-classic/LICENSE">GPL-2.0-or-later</a>)</span>
+    <span class="spacer"></span>
+    <a href="https://github.com/leksah/leksah">GitHub</a>
+    <a href="https://github.com/leksah/leksah/issues">Issues</a>
+    <a href="https://github.com/leksah/leksah/blob/master/CHANGELOG.md">Changelog</a>
+  </footer>
 </div>
 
-<div id="content">
-<div id="text">
-<h1>Leksah</h1>
+<script>
+  // The live in-browser IDE is embedded directly (loading="lazy", so the
+  // browser still defers leksah.js — which is large — until the frame nears
+  // the viewport).  `embed()` survives for the fullscreen button and for the
+  // old placeholder path: it is a no-op once an iframe is in place.
+  (function () {
+    var frame = document.getElementById('demoFrame');
+    function embed() {
+      var video = frame.querySelector('video');
+      if (!video) return;   // already embedded
+      var iframe = document.createElement('iframe');
+      iframe.src = '/try/';
+      iframe.title = 'Leksah running in your browser';
+      video.replaceWith(iframe);
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries, obs) {
+        if (entries.some(function (e) { return e.isIntersecting; })) {
+          obs.disconnect();
+          embed();
+        }
+      }, { rootMargin: '200px' }).observe(frame);
+    } else {
+      embed();
+    }
+    document.getElementById('demoFullscreen').addEventListener('click', function () {
+      embed();
+      var req = frame.requestFullscreen || frame.webkitRequestFullscreen;
+      if (req) req.call(frame);
+    });
+  })();
 
-<a href="screenshots.html"><img src="images/Bildschirmfoto-leksah-0.8-black-little.png" alt="Bildschirmfoto" align="right" vspace="10" hspace="20" /></a>
-
-<p><big><em>Leksah</em> is the Haskell IDE of choice. It is written in Haskell, uses Gtk, and runs on Linux, Windows and Mac OS X. Leksah is a practical tool to support the Haskell development process. It requires the Glasgow Haskell Compiler (GHC).</big></p>
-
-<p><big>Leksah is completely free and distributed under the Gnu General Public License 2.0 </big></p>
-
-<img src="images/logolibertelight.jpg" width="100" height="97" align="left" alt="gnu"/>
-
-<br clear="all"/>
-<br/>
-<table border="1" rules="none" frame="void" summary ="frame">
-  <tbody >
-    <tr>
-      <td width="60%"><h1> Leksah may be worth trying because:</h1>
-<ul>
-    <li>It uses the cabal package format and incorporates a cabal file editor</li>
-    <li>It offers Workspaces for complex project with multiple packages with automatic build of dependencies</li>
-    <li>It contains a module browser that allows you to find type information 
-	about all the functions/symbols available in the packages installed on your system</li>
-    <li>For most packages it shows as well haddock style comments, and give direct navigation to sources</li>
-    <li>It integrates ghci debugging (including continuous recompilation) that allows you to type 
-	check and evaluate highlighted code snippets from within the editor itself. Includes a scratch buffer for testing ideas</li>
-    <li>It includes an helper for automatic addition of import statements</li>
-    <li>Offers a Haskell customised editor with "source candy"</li>
-    <li>Multi-window support for a multi head setting</li>
-    <li>Many standard features of IDEs like: Jump to errors, Auto Completion, Grep integration, ...</li>
-    <li>Configurable with session support, keymaps and flexible appearance</li>
- </ul></td>
-  </tbody>
-</table>
-
-</div>
-</div>
-
-<div id="footer">
-<div id="pageinfo">
-<div class="copyright">
-<a name="pagecopyright"></a>
-
-Copyleft 2008-2010, leksah project
-</div>
-
-
-<div class="pagedate">
-</div>
-
-</div>
-
-<!-- from about -->
-</div>
+  // Point the #install download button at the visitor's OS and rebuild the
+  // alternates line with the rest.  The artifact names here must match the
+  // assets scripts/release.sh uploads to the v<version> GitHub release
+  // (built by nix/{linux-tarball,macos-dmg,windows-installer,
+  // linux-warp-tarball}.nix), and v must match the version it releases.
+  (function () {
+    var v = '2.0.0.0';
+    var base = 'https://github.com/leksah/leksah/releases/download/v' + v + '/';
+    var dl = {
+      linux:   { label: 'Linux (x86_64)', file: 'leksah-' + v + '-x86_64-linux.tar.gz' },
+      macos:   { label: 'macOS',          file: 'Leksah-' + v + '.dmg' },
+      windows: { label: 'Windows',        file: 'LeksahSetup.exe' },
+      server:  { label: 'Linux server (static, browser UI)',
+                 file: 'leksah-warp-' + v + '-x86_64-linux-musl.tar.gz' }
+    };
+    var ua = navigator.userAgent;
+    // iPhone/iPad get the macOS link: not runnable there, but the least
+    // wrong thing to hand someone who taps Download on an Apple device.
+    var os = /Windows/i.test(ua) ? 'windows'
+           : /Mac|iPhone|iPad/i.test(ua) ? 'macos'
+           : 'linux';
+    var btn = document.getElementById('dlBtn');
+    btn.href = base + dl[os].file;
+    btn.textContent = '⬇  Download for ' + dl[os].label;
+    var alts = document.getElementById('dlAlts');
+    alts.textContent = '';
+    Object.keys(dl).filter(function (k) { return k !== os; }).forEach(function (k, i) {
+      if (i) alts.appendChild(document.createTextNode(' · '));
+      var a = document.createElement('a');
+      a.href = base + dl[k].file;
+      a.textContent = dl[k].label;
+      alts.appendChild(a);
+    });
+  })();
+</script>
 
 </body>
 </html>

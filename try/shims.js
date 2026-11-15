@@ -20,7 +20,7 @@
   const g = globalThis;
 
   // The browser "environment" (read by the RTS env functions after
-  // patch-rts.py rewrites them; see that file).  HOME in particular:
+  // patch-rts.hs rewrites them; see that file).  HOME in particular:
   // without it directory's getHomeDirectory falls back to the passwd
   // database, which doesn't exist here either.
   g.leksahDemoEnv = g.leksahDemoEnv || {
